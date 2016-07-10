@@ -41,7 +41,7 @@ type SmartComponents struct {
     StateAbbreviation           string          `json:"state_abbreviation"`
     Zipcode                     string          `json:"zipcode"`
     Plus4Code                   string          `json:"plus4_code"`
-    DeliveryPoint               string          `json:delivery_point"`
+    DeliveryPoint               string          `json:"delivery_point"`
     DeliveryPointCheckDigit     string          `json:"delivery_point_check_digit"`
 }
 
