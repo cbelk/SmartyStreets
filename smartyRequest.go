@@ -1,4 +1,4 @@
-package SmartyStreets
+package smarty
 
 import (
     "fmt"
@@ -98,8 +98,8 @@ func prepareReqQuery(req *SmartRequest) (query string, err error) {
         } else {
             err = errors.New("Either street + city + state OR street + zipcode required if not using freeform addressing")
         }
-    } else if req.Freeform != "" {
-        query += fmt.Sprintf("&street=%s", url.QueryEscape(req.Freeform))
+    } else if req.FreeForm != "" {
+        query += fmt.Sprintf("&street=%s", url.QueryEscape(req.FreeForm))
     } else {
         err = errors.New("Street address OR freeform required")
     }
