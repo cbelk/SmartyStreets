@@ -20,13 +20,13 @@ type SmartRequest struct {
     City        string
     State       string
     Zipcode     string
+    FreeForm    string  //Entire address stored in this field (NO country info)
     Candidates  int     //Max number of results (MAX 10)
 }
 
 // SmartRequestOptional holds the optional request data.
 type SmartRequestOptional struct {
     Addressee   string  //Name of recipient, firm or company
-    FreeForm    string  //Entire address stored in this field (NO country info)
     InputID     string  //Unique id that gets copied into output
     Lastline    string  //City, State and ZipCode combined
     Secondary   string  //Apartment, suite, or office number
@@ -38,13 +38,16 @@ type SmartRequestOptional struct {
 // parameters can be omitted by passing in nil for reqOp. Note: The req paramter cannot take a nil value
 // since it holds the authentication info.
 func GetAddress(req *SmartRequest, reqOp *SmartRequestOptional) (res *http.Response, err error) {
-    if req != nil && reqOp == nil {
+    if req != nil {
         if hasAuth(req) {
             nurl := baseURL + fmt.Sprintf("?auth-id=%s&auth-token=%s", req.AuthID, req.AuthToken)
             query, e := prepareReqQuery(req)
             if e == nil {
                 nurl += query
                 appendCandidates(req, &nurl)
+                if reqOp != nil {
+                    nurl += prepareReqOpQuery(reqOp)
+                }
                 res, e = http.Get(nurl)
                 if e != nil {
                     err = e
@@ -93,10 +96,33 @@ func prepareReqQuery(req *SmartRequest) (query string, err error) {
         } else if req.Zipcode != "" {
             query += fmt.Sprintf("&zipcode=%s", url.QueryEscape(req.Zipcode))
         } else {
-            err = errors.New("Either street + city + state OR street + zipcode required if not using SmartRequestOptional")
+            err = errors.New("Either street + city + state OR street + zipcode required if not using freeform addressing")
         }
+    } else if req.Freeform != "" {
+        query += fmt.Sprintf("&street=%s", url.QueryEscape(req.Freeform))
     } else {
-        err = errors.New("Street address required")
+        err = errors.New("Street address OR freeform required")
+    }
+    return
+}
+
+// prepareReqOpQuery constructs and returns the query string from the SmartRequestOptions based on the rules defined in
+// the 'Input Fields' section of the api documentation.
+func prepareReqOpQuery(reqOp *SmartRequestOptional) (query string) {
+    if reqOp.Addressee != "" {
+        query += "&addressee=" + url.QueryEscape(reqOp.Addressee)
+    }
+    if reqOp.InputID != "" {
+        query += "&input_id=" + url.QueryEscape(reqOp.InputID)
+    }
+    if reqOp.Lastline != "" {
+        query += "&lastline=" + url.QueryEscape(reqOp.Lastline)
+    }
+    if reqOp.Secondary != "" {
+        query += "&secondary=" + url.QueryEscape(reqOp.Secondary)
+    }
+    if reqOp.Street2 != "" {
+        query += "&street2=" + url.QueryEscape(reqOp.Street2)
     }
     return
 }
