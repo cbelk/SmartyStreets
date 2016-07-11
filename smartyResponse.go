@@ -7,7 +7,7 @@ import (
     "net/http"
 )
 
-// SmartResponse holds the fields the Root according to the SmartyStreets api output field definitions.
+// SmartResponse holds the fields the Root according to the SmartyStreets US street api output field definitions.
 type SmartResponse struct {
     InputID                     string          `json:"input_id"`
     InputIndex                  int             `json:"input_index"`
@@ -22,7 +22,7 @@ type SmartResponse struct {
     Analysis                    SmartAnalysis   `json:"analysis"`
 }
 
-// SmartComponents holds the fields the Components according to the SmartyStreets api output field definitions.
+// SmartComponents holds the fields the Components according to the SmartyStreets US street api output field definitions.
 type SmartComponents struct {
     Urbanization                string
     PrimaryNumber               string          `json:"primary_number"`
@@ -45,7 +45,7 @@ type SmartComponents struct {
     DeliveryPointCheckDigit     string          `json:"delivery_point_check_digit"`
 }
 
-// SmartMetaData holds the fields the Metadata according to the SmartyStreets api output field definitions.
+// SmartMetaData holds the fields the Metadata according to the SmartyStreets US street api output field definitions.
 type SmartMetaData struct {
     RecordType                  string          `json:"record_type"`
     Ziptype                     string          `json:"zip_type"`
@@ -65,7 +65,7 @@ type SmartMetaData struct {
     DST                         bool            `json:"dst"`
 }
 
-// SmartAnalysis holds the fields the Analysis according to the SmartyStreets api output field definitions.
+// SmartAnalysis holds the fields the Analysis according to the SmartyStreets US street api output field definitions.
 type SmartAnalysis struct {
     DPVmatchCode                string          `json:"dpv_match_code"`
     DPVfootnotes                string          `json:"dpv_footnotes"`
@@ -81,8 +81,11 @@ type SmartAnalysis struct {
 
 // ParseResponse is used to check the status code and unpack the returned json (assuming 200 statuscode) into
 // a SmartResponse object.
-func ParseResponse(res *http.Response) (smart []SmartResponse, err error) {
-   if res.StatusCode == 200 {
+func ParseResponse(res *http.Response) ([]SmartResponse, error) {
+    var smart []SmartResponse
+    var err error
+    if res.StatusCode == 200 {
+//        json.NewDecoder(res.Body).Decode(&smart)
         b, e := ioutil.ReadAll(res.Body)
         if e != nil {
             err = e
@@ -95,11 +98,11 @@ func ParseResponse(res *http.Response) (smart []SmartResponse, err error) {
    } else {
         err = getStatusError(res.StatusCode)
    }
-   return
+   return smart, err
 }
 
-// getStatusError is used to check the status code and produce an error according to the SmartyStreets api
-// status codes and results section.
+// getStatusError is used to check the status code and produce an error according to the SmartyStreets US
+// street api status codes and results section.
 func getStatusError(statusCode int) (err error) {
     if statusCode == 401 {
         err = errors.New("Unauthorized")
