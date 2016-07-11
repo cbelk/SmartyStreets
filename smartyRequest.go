@@ -85,7 +85,7 @@ func GetAddress(req *SmartRequest, reqOp *SmartRequestOptional) (res *http.Respo
 // PostAddress is used to construct the POST request from the slices of struct references. If there are
 // no request options, then a nil value can be passed for reqOps, but if even if just one reqOp is needed,
 // then reqOps must contain an entry in its slice to go with the corresponding entry in the reqs slice (even
-// if it's just a nil value). Therefore, reqOps can be nil OR has to be the same length as reqs. Authentication
+// if it's just an empty object). Therefore, reqOps can be nil OR has to be the same length as reqs. Authentication
 // needs to be provided in at least one req object in the reqs slice. After constructing the request data, the
 // appropriate headers are added and the request is POSTed, returning the result.
 func PostAddress(reqs []*SmartRequest, reqOps []*SmartRequestOptional) (res *http.Response, err error) {
