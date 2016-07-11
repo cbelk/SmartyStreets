@@ -36,13 +36,16 @@ type SmartRequestOptional struct {
     Urbanization string  //Only used with Puerto Rico
 }
 
-type JsonData struct {
+// JSONData will hold the data to be passed in as the json object in the POST request.
+// Currently using this insted of merging the passed in SmartRequest and SmartRequestOptional
+// to avoid confilct since street and freeform will populate the same json object field (street:)
+type JSONData struct {
     Street       string `json:"street"`
     City         string `json:"city"`
     State        string `json:"state"`
     Zipcode      string `json:"zipcode"`
     Addressee    string `json:"addressee"`
-    InputID     string `json:"input_id"`
+    InputID      string `json:"input_id"`
     Lastline     string `json:"lastline"`
     Secondary    string `json:"secondary"`
     Street2      string `json:"street2"`
@@ -79,13 +82,19 @@ func GetAddress(req *SmartRequest, reqOp *SmartRequestOptional) (res *http.Respo
     return
 }
 
+// PostAddress is used to construct the POST request from the slices of struct references. If there are
+// no request options, then a nil value can be passed for reqOps, but if even if just one reqOp is needed,
+// then reqOps must contain an entry in its slice to go with the corresponding entry in the reqs slice (even
+// if it's just a nil value). Therefore, reqOps can be nil OR has to be the same length as reqs. Authentication
+// needs to be provided in at least one req object in the reqs slice. After constructing the request data, the
+// appropriate headers are added and the request is POSTed, returning the result.
 func PostAddress(reqs []*SmartRequest, reqOps []*SmartRequestOptional) (res *http.Response, err error) {
     if reqs != nil {
         equal := len(reqs) == len(reqOps)
         omitted := reqOps == nil
         if equal || omitted {
             var nurl string
-            var data []JsonData
+            var data []JSONData
             authed := false
             for k := range reqs {
                 if hasAuth(reqs[k]) {
@@ -128,6 +137,52 @@ func PostAddress(reqs []*SmartRequest, reqOps []*SmartRequestOptional) (res *htt
     return
 }
 
+// addReqData is used to pack the fields from the SmartRequest object into
+// the JSONData object.
+func addReqData(req *SmartRequest, data *JSONData) {
+    if req.FreeForm != "" {
+        data.Street = req.FreeForm
+    }
+    if req.Street != "" {
+        data.Street = req.Street
+    }
+    if req.City != "" {
+        data.City = req.City
+    }
+    if req.State != "" {
+        data.State = req.State
+    }
+    if req.Zipcode != "" {
+        data.Zipcode = req.Zipcode
+    }
+    if req.Candidates != 0 {
+        data.Candidates = req.Candidates
+    }
+}
+
+// addReqOpData is used to pack the fields from the SmartRequestOptional object into
+// the JSONData object.
+func addReqOpData(reqOp *SmartRequestOptional, data *JSONData) {
+    if reqOp.Addressee != "" {
+        data.Addressee = reqOp.Addressee
+    }
+    if reqOp.InputID != "" {
+        data.InputID = reqOp.InputID
+    }
+    if reqOp.Lastline != "" {
+        data.Lastline = reqOp.Lastline
+    }
+    if reqOp.Secondary != "" {
+        data.Secondary = reqOp.Secondary
+    }
+    if reqOp.Street2 != "" {
+        data.Street2 = reqOp.Street2
+    }
+    if reqOp.Urbanization != "" {
+        data.Urbanization = reqOp.Urbanization
+    }
+}
+
 // appendCandidates is used to determine whether the candidates value has been set and add the appropriate
 // value to the query string. The value is confined to the range [1-10] with a default value of 1 per the 
 // api specifications.
@@ -149,8 +204,10 @@ func hasAuth(req *SmartRequest) bool {
     return false
 }
 
-func preparePostData(req *SmartRequest) (*JsonData, error) {
-    var data JsonData
+// preparePostData drives the creation of the json object to be submitted with the
+// POST request.
+func preparePostData(req *SmartRequest) (*JSONData, error) {
+    var data JSONData
     var err error
     if req != nil {
         if validReq(req) {
@@ -162,61 +219,6 @@ func preparePostData(req *SmartRequest) (*JsonData, error) {
         err = errors.New("SmartRequest cannot be nil")
     }
     return &data, err
-}
-
-func addReqOpData(reqOp *SmartRequestOptional, data *JsonData) {
-    if reqOp.Addressee != "" {
-        data.Addressee = reqOp.Addressee
-    }
-    if reqOp.InputID != "" {
-        data.InputID = reqOp.InputID
-    }
-    if reqOp.Lastline != "" {
-        data.Lastline = reqOp.Lastline
-    }
-    if reqOp.Secondary != "" {
-        data.Secondary = reqOp.Secondary
-    }
-    if reqOp.Street2 != "" {
-        data.Street2 = reqOp.Street2
-    }
-    if reqOp.Urbanization != "" {
-        data.Urbanization = reqOp.Urbanization
-    }
-}
-
-func addReqData(req *SmartRequest, data *JsonData) {
-    if req.FreeForm != "" {
-        data.Street = req.FreeForm
-    }
-    if req.Street != "" {
-        data.Street = req.Street
-    }
-    if req.City != "" {
-        data.City = req.City
-    }
-    if req.State != "" {
-        data.State = req.State
-    }
-    if req.Zipcode != "" {
-        data.Zipcode = req.Zipcode
-    }
-    if req.Candidates != 0 {
-        data.Candidates = req.Candidates
-    }
-}
-
-func validReq(req *SmartRequest) bool {
-    if req.Street != "" {
-        if (req.City != "" && req.State != "") || req.Zipcode != "" {
-            return true
-        } else if req.FreeForm != "" {
-            return true
-        }
-    } else if req.FreeForm != "" {
-        return true
-    }
-    return false
 }
 
 // prepareReqQuery constructs and returns the query string from the SmartRequest based on the rules defined in
@@ -261,4 +263,19 @@ func prepareReqOpQuery(reqOp *SmartRequestOptional) (query string) {
         query += "&street2=" + url.QueryEscape(reqOp.Street2)
     }
     return
+}
+
+// validReq is used to check the validity of the submitted request. A valid request must contain at least
+// either street + city + state OR street + zipcode OR freeform input per the SmartyStreets US address api.
+func validReq(req *SmartRequest) bool {
+    if req.Street != "" {
+        if (req.City != "" && req.State != "") || req.Zipcode != "" {
+            return true
+        } else if req.FreeForm != "" {
+            return true
+        }
+    } else if req.FreeForm != "" {
+        return true
+    }
+    return false
 }
