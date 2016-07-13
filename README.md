@@ -2,19 +2,19 @@
 
 This is a go package for working with the SmartyStreets US Street Address API. 
 
-To install this package you can run:
-    go get github.com/cbelk/smarty
+To install this package you can run:<br>
+`go get github.com/cbelk/smarty`
 
 The package will verify that the minimum information required by the API has been provided.
 The minimum requirements are:
-    * AuthID
-    * AuthToken
-    * Either:
-        - Street, City, State
-        OR
-        - Street, ZipCode
-        OR
-        - Street (freeform)
+  * AuthID
+  * AuthToken
+  * Either:
+    * Street, City, State
+        <br>OR
+    * Street, ZipCode
+        <br>OR
+    * Street (freeform)
 
 The package supports both the GET and POST requests and returns an array of SmartResponse objects.
 
@@ -108,3 +108,6 @@ func main () {
     fmt.Printf("Smart: %v\n", smart)
 }
 ```
+
+For a description of the input fields or questions about the API refer to the SmartyStreets documentation:<br>
+[Smarty Streets US Address API](https://smartystreets.com/docs/us-street-api)
