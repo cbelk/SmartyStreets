@@ -36,6 +36,12 @@ type SmartRequestOptional struct {
     Urbanization string  //Only used with Puerto Rico
 }
 
+// HeadersOptional will hold the optional headers to be passed in if any.
+type HeadersOptional struct {
+    XStandardizeOnly bool
+    XIncludeInvalid  bool
+}
+
 // JSONData will hold the data to be passed in as the json object in the POST request.
 // Currently using this insted of merging the passed in SmartRequest and SmartRequestOptional
 // to avoid confilct since street and freeform will populate the same json object field (street:)
@@ -88,7 +94,7 @@ func GetAddress(req *SmartRequest, reqOp *SmartRequestOptional) (res *http.Respo
 // if it's just an empty object). Therefore, reqOps can be nil OR has to be the same length as reqs. Authentication
 // needs to be provided in at least one req object in the reqs slice. After constructing the request data, the
 // appropriate headers are added and the request is POSTed, returning the result.
-func PostAddress(reqs []*SmartRequest, reqOps []*SmartRequestOptional) (res *http.Response, err error) {
+func PostAddress(reqs []*SmartRequest, reqOps []*SmartRequestOptional, headOp *HeadersOptional) (res *http.Response, err error) {
     if reqs != nil {
         equal := len(reqs) == len(reqOps)
         omitted := reqOps == nil
@@ -119,6 +125,9 @@ func PostAddress(reqs []*SmartRequest, reqOps []*SmartRequestOptional) (res *htt
                 if e == nil {
                     hreq.Header.Set("Content-Type", "application/json")
                     hreq.Header.Set("Host", "api.smartystreets.com")
+                    if headOp != nil {
+                        addHeadersOptional(hreq, headOp)
+                    }
                     client := &http.Client{}
                     res, e = client.Do(hreq)
                     if e != nil {
@@ -135,6 +144,16 @@ func PostAddress(reqs []*SmartRequest, reqOps []*SmartRequestOptional) (res *htt
         }
     }
     return
+}
+
+// addHeadersOptional is used to set the optional headers if they are present.
+func addHeadersOptional(req *http.Request, headOp *HeadersOptional) {
+    if headOp.XStandardizeOnly != false {
+        req.Header.Set("X-Standardize-Only", "true")
+    }
+    if headOp.XIncludeInvalid != false {
+        req.Header.Set("X-Include-Invalid", "true")
+    }
 }
 
 // addReqData is used to pack the fields from the SmartRequest object into
