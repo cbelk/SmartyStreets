@@ -17,6 +17,8 @@ The minimum requirements are:
     * Street (freeform)
 
 The package supports both the GET and POST requests and returns an array of SmartResponse objects.
+The optional headers described in the API documentation are also supported through the HeadersOptional struct. Note: a nil
+value can be subsituted if you do not wish to set these optional headers.
 
 An example program using GET:<br>
 *Note: If you don't want to set any optional arguments you can pass in nil for the SmartRequestOptional parameter.*
@@ -34,8 +36,11 @@ func main () {
     req.Street = "123 Some St."
     req.City = "Heresville"
     req.State = "CA"
+    
+    headOp := new(smarty.HeadersOptional)
+    headOp.XIncludeInvalid = true
 
-    res, err := smarty.GetAddress(req, nil)
+    res, err := smarty.GetAddress(req, nil, headOp)
     if err != nil {
         log.Fatal(err)
     }
@@ -95,7 +100,7 @@ func main () {
     reqOps = append(reqOps, reqOp2)
     reqOps = append(reqOps, reqOp3)
 
-    res, err := smarty.PostAddress(reqs, reqOps)
+    res, err := smarty.PostAddress(reqs, reqOps, nil)
     if err != nil {
         log.Fatal(err)
     }
