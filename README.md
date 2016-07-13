@@ -18,7 +18,7 @@ The minimum requirements are:
 
 The package supports both the GET and POST requests and returns an array of SmartResponse objects.
 
-An example program using GET:
+An example program using GET:<br>
 *Note: If you don't want to set any optional arguments you can pass in nil for the SmartRequestOptional parameter.*
 ```
 import (
