@@ -63,7 +63,7 @@ type JSONData struct {
 // the request to the SmartyStreets api and returns the response and/or an error. The optional request
 // parameters can be omitted by passing in nil for reqOp. Note: The req paramter cannot take a nil value
 // since it holds the authentication info.
-func GetAddress(req *SmartRequest, reqOp *SmartRequestOptional) (res *http.Response, err error) {
+func GetAddress(req *SmartRequest, reqOp *SmartRequestOptional, headOp *HeadersOptional) (res *http.Response, err error) {
     if req != nil {
         if hasAuth(req) {
             nurl := baseURL + fmt.Sprintf("?auth-id=%s&auth-token=%s", req.AuthID, req.AuthToken)
@@ -74,8 +74,17 @@ func GetAddress(req *SmartRequest, reqOp *SmartRequestOptional) (res *http.Respo
                 if reqOp != nil {
                     nurl += prepareReqOpQuery(reqOp)
                 }
-                res, e = http.Get(nurl)
-                if e != nil {
+                hreq, e := http.NewRequest("GET", nurl, nil)
+                if e == nil {
+                    if headOp != nil {
+                        addHeadersOptional(hreq, headOp)
+                    }
+                    client := &http.Client{}
+                    res, e = client.Do(hreq)
+                    if e != nil {
+                        err = e
+                    }
+                } else {
                     err = e
                 }
             } else {
@@ -148,10 +157,10 @@ func PostAddress(reqs []*SmartRequest, reqOps []*SmartRequestOptional, headOp *H
 
 // addHeadersOptional is used to set the optional headers if they are present.
 func addHeadersOptional(req *http.Request, headOp *HeadersOptional) {
-    if headOp.XStandardizeOnly != false {
+    if headOp.XStandardizeOnly {
         req.Header.Set("X-Standardize-Only", "true")
     }
-    if headOp.XIncludeInvalid != false {
+    if headOp.XIncludeInvalid {
         req.Header.Set("X-Include-Invalid", "true")
     }
 }
