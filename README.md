@@ -1,6 +1,9 @@
 # smarty
 
-This is a go package for working with the SmartyStreets US Street Address API. 
+This is a go package for working with the SmartyStreets US Street Address API.
+
+For a description of the input fields or questions about the API refer to the SmartyStreets documentation:<br>
+[Smarty Streets US Address API](https://smartystreets.com/docs/us-street-api)
 
 To install this package you can run:<br>
 `go get github.com/cbelk/smarty`
@@ -113,6 +116,3 @@ func main () {
     fmt.Printf("Smart: %v\n", smart)
 }
 ```
-
-For a description of the input fields or questions about the API refer to the SmartyStreets documentation:<br>
-[Smarty Streets US Address API](https://smartystreets.com/docs/us-street-api)
